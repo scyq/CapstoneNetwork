@@ -13,9 +13,9 @@ unknown = '</UNK>'  #unknown字符
 eos = '</EOS>'  #句子结束符
 sos = '</SOS>'  #句子开始符
 padding = '</PAD>'  #句子填充负
-max_voc_length = 600000  #字典最大长度
+max_voc_length = 10000  #字典最大长度
 min_word_appear = 10  #加入字典的词的词频最小值
-max_sentence_length = 500  #最大句子长度
+max_sentence_length = 50  #最大句子长度
 save_path = 'corpus.pth'  #已处理的对话数据集保存路径
 
 
@@ -37,6 +37,7 @@ def preprocess():
     word_nums = {}  #统计单词的词频
 
     def update(word_nums):
+
         def fun(word):
             word_nums[word] = word_nums.get(word, 0) + 1
             return None

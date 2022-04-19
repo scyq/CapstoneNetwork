@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 import torch
 import logging
 import torch.nn as nn
@@ -7,6 +7,7 @@ from utils.greedysearch import GreedySearchDecoder
 
 
 class EncoderRNN(nn.Module):
+
     def __init__(self, opt, voc_length):
         '''
         voc_length: 字典长度,即输入的单词的one-hot编码长度
@@ -17,8 +18,11 @@ class EncoderRNN(nn.Module):
         #nn.Embedding输入向量维度是字典长度,输出向量维度是词向量维度
         self.embedding = nn.Embedding(voc_length, opt.embedding_dim)
         #双向GRU作为Encoder
-        self.gru = nn.GRU(opt.embedding_dim, self.hidden_size, self.num_layers,
-                          dropout=(0 if opt.num_layers == 1 else opt.dropout), bidirectional=opt.bidirectional)
+        self.gru = nn.GRU(opt.embedding_dim,
+                          self.hidden_size,
+                          self.num_layers,
+                          dropout=(0 if opt.num_layers == 1 else opt.dropout),
+                          bidirectional=opt.bidirectional)
 
     def forward(self, input_seq, input_lengths, hidden=None):
         '''
@@ -46,23 +50,26 @@ class EncoderRNN(nn.Module):
         输出的hidden:
             [num_layers*num_directions, batch_size, hidden_size]
         '''
-        
-        embedded = self.embedding(input_seq) 
-        packed = torch.nn.utils.rnn.pack_padded_sequence(embedded, input_lengths)
+
+        embedded = self.embedding(input_seq)
+        packed = torch.nn.utils.rnn.pack_padded_sequence(
+            embedded, input_lengths.to('cpu'))
         outputs, hidden = self.gru(packed, hidden)
         outputs, _ = torch.nn.utils.rnn.pad_packed_sequence(outputs)
-        outputs = outputs[:, :, :self.hidden_size] + outputs[:, : ,self.hidden_size:]
+        outputs = outputs[:, :, :self.hidden_size] + outputs[:, :,
+                                                             self.hidden_size:]
         return outputs, hidden
 
 
-
 class Attn(torch.nn.Module):
+
     def __init__(self, attn_method, hidden_size):
         super(Attn, self).__init__()
-        self.method = attn_method #attention方法
+        self.method = attn_method  #attention方法
         self.hidden_size = hidden_size
         if self.method not in ['dot', 'general', 'concat']:
-            raise ValueError(self.method, "is not an appropriate attention method.")
+            raise ValueError(self.method,
+                             "is not an appropriate attention method.")
         if self.method == 'general':
             self.attn = torch.nn.Linear(self.hidden_size, self.hidden_size)
         elif self.method == 'concat':
@@ -104,10 +111,11 @@ class Attn(torch.nn.Module):
         经过attn后得到[max_seq_len, batch_size, hidden_size],再进行tanh,shape不变
         最后与v乘
         '''
-        energy = self.attn(torch.cat((hidden.expand(encoder_outputs.size(0), -1, -1), 
-				      encoder_outputs), 2)).tanh()
+        energy = self.attn(
+            torch.cat((hidden.expand(encoder_outputs.size(0), -1,
+                                     -1), encoder_outputs), 2)).tanh()
         return torch.sum(self.v * energy, dim=2)
-    
+
     def forward(self, hidden, encoder_outputs):
         if self.method == 'general':
             attn_energies = self.general_score(hidden, encoder_outputs)
@@ -120,7 +128,9 @@ class Attn(torch.nn.Module):
         #对dim=1进行softmax,然后插入维度[batch_size, 1, max_seq_len]
         return F.softmax(attn_energies, dim=1).unsqueeze(1)
 
+
 class LuongAttnDecoderRNN(nn.Module):
+
     def __init__(self, opt, voc_length):
         super(LuongAttnDecoderRNN, self).__init__()
 
@@ -131,7 +141,11 @@ class LuongAttnDecoderRNN(nn.Module):
         self.dropout = opt.dropout
         self.embedding = nn.Embedding(voc_length, opt.embedding_dim)
         self.embedding_dropout = nn.Dropout(self.dropout)
-        self.gru = nn.GRU(opt.embedding_dim, self.hidden_size, self.num_layers, dropout=(0 if self.num_layers == 1 else self.dropout))
+        self.gru = nn.GRU(
+            opt.embedding_dim,
+            self.hidden_size,
+            self.num_layers,
+            dropout=(0 if self.num_layers == 1 else self.dropout))
         self.concat = nn.Linear(self.hidden_size * 2, self.hidden_size)
         self.out = nn.Linear(self.hidden_size, self.output_size)
         self.attn = Attn(self.attn_method, self.hidden_size)
@@ -151,14 +165,14 @@ class LuongAttnDecoderRNN(nn.Module):
             这里还接收了encoder_outputs输入,用于计算attention
         '''
         #转为词向量[1, batch_size, embedding_dim]
-        embedded = self.embedding(input_step) 
+        embedded = self.embedding(input_step)
         embedded = self.embedding_dropout(embedded)
         #rnn_output: [1, batch_size, hidden_size]
         #hidden: [num_layers, batch_size, hidden_size]
         rnn_output, hidden = self.gru(embedded, last_hidden)
         #attn_weights: [batch_size, 1, max_seq_len]
         attn_weights = self.attn(rnn_output, encoder_outputs)
-        #bmm批量矩阵相乘, 
+        #bmm批量矩阵相乘,
         #attn_weights是batch_size个矩阵[1, max_seq_len]
         #encoder_outputs.transpose(0, 1)是batch_size个[max_seq_len, hidden_size]
         #相乘结果context为: [batch_size, 1, hidden_size]
@@ -171,7 +185,7 @@ class LuongAttnDecoderRNN(nn.Module):
         #最后进行全连接,映射为[batch_size, voc_length]
         #最后进行softmax: [batch_size, voc_length]
         concat_input = torch.cat((rnn_output, context), 1)
-        concat_output = torch.tanh(self.concat(concat_input))  
+        concat_output = torch.tanh(self.concat(concat_input))
         output = self.out(concat_output)
         output = F.softmax(output, dim=1)
 
