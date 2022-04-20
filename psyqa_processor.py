@@ -16,8 +16,9 @@ def json2tsv():
         主要是中英文井号
         所以利用正则表达式只取第一层回复
     '''
-    IF_SPLIT_DATA = True
-    IF_DATA_AUGMENTATION = False
+    IF_SPLIT_DATA = True  # 如果要去除多层回复，把IF_SPLIT_DATA改为True
+    IF_DATA_AUGMENTATION = False  # 如果要增加训练数据，把问题描述也算进去，把IF_DATA_AUGMENTATION改为True
+    IF_UNIQUE_KEY = True  # 如果要去除重复的问题，把IF_UNIQUE_KEY改为True，改为False可能会不说人话
     re_splitter = "#|＃|■|※|@|<|>"
 
     # 该数据集涉密, 所以不能直接提取
@@ -31,13 +32,11 @@ def json2tsv():
             # 记得去除delimiter
             questions.append(obj["question"].replace(delimiter, ""))  # 简洁的问题
             if IF_DATA_AUGMENTATION:
-                questions.append(obj["description"].replace(
-                    delimiter, ""))  # 问题的描述可以作为另一个问题, 增大训练集
+                questions.append(obj["description"].replace(delimiter, ""))
             answers = obj["answers"]
             for question in questions:
                 for answer in answers:
                     answer_text = answer["answer_text"].replace(delimiter, "")
-                    # 如果要去除多层回复，把IF_SPLIT_DATA改为True
                     if (IF_SPLIT_DATA and re.search(re_splitter, answer_text)):
                         answer_text = re.split(re_splitter, answer_text)
                         # 去除列表中的空字符串
@@ -46,22 +45,11 @@ def json2tsv():
                         ][0]
                     to_write = [question, answer_text]
                     tsv_writer.writerow(to_write)
+                    if IF_UNIQUE_KEY:  # 只执行一遍
+                        break
 
     print("json转tsv完成")
 
 
-# 没写完, 不能用
-def preprocess():
-    print("开始预处理...")
-    data = []
-    with open(clean_chat_data, encoding="utf-8") as f:
-        lines = f.readlines()
-        for line in lines:
-            sentences = line.strip("\n").split(delimiter)
-            assert len(sentences) == 2, "每行句子不是两个, 以\t分隔"  # 确保每行有且只有两个句子
-            data.append(sentences)
-
-
 if __name__ == "__main__":
     json2tsv()
-    # preprocess()

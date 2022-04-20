@@ -7,19 +7,17 @@ class Config:
     '''
     Chatbot模型参数
     '''
-    # corpus_data_path = 'corpus.pth'  #已处理的对话数据
-    corpus_data_path = "corpus_new.pth"
+    corpus_data_path = 'corpus.pth'  #已处理的对话数据
     use_QA_first = True  #是否载入知识库
-    max_input_length = 50  #输入的最大句子长度
-    max_generate_length = 20  #生成的最大句子长度
+    max_input_length = 200  #输入的最大句子长度
+    max_generate_length = 200  #生成的最大句子长度
     prefix = 'checkpoints/chatbot'  #模型断点路径前缀
-    model_ckpt = 'checkpoints/chatbot_0419_1533'  #加载模型路径
-    # model_ckpt = None  # 如果从零开始训练, 则不从任何checkpoints继续
+    # model_ckpt = 'checkpoints/chatbot_0419_1533'  #加载模型路径
+    model_ckpt = None  # 如果从零开始训练, 则不从任何checkpoints继续
     '''
     训练超参数
     '''
-    # batch_size = 2048
-    batch_size = 1024
+    batch_size = 2048  #每批训练数据的大小
     shuffle = True  #dataloader是否打乱数据
     num_workers = 0  #dataloader多进程提取数据
     bidirectional = True  #Encoder-RNN是否双向
@@ -35,7 +33,7 @@ class Config:
     '''
     训练周期信息
     '''
-    epoch = 300
+    epoch = 1000
     save_every = 1  #每隔save_every个Epoch打印一次
     '''
     GPU
