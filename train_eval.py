@@ -194,6 +194,7 @@ def train(**kwargs):
                     'en_opt': encoder_optimizer.state_dict(),
                     'de_opt': decoder_optimizer.state_dict(),
                 }, checkpoint_path)
+            print("Saved checkpoint to {}".format(checkpoint_path))
 
 
 def generate(input_seq, searcher, sos, eos, opt):

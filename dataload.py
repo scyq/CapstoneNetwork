@@ -1,8 +1,9 @@
-# -*- coding: utf-8 -*- 
+# -*- coding: utf-8 -*-
 
 import torch
 import itertools
 from torch.utils import data as dataimport
+
 
 def zeroPadding(l, fillvalue):
     '''
@@ -11,6 +12,7 @@ def zeroPadding(l, fillvalue):
     [batch_size, max_seq_len] ==> [max_seq_len, batch_size]
     '''
     return list(itertools.zip_longest(*l, fillvalue=fillvalue))
+
 
 def binaryMatrix(l, value):
     '''
@@ -26,6 +28,7 @@ def binaryMatrix(l, value):
             else:
                 m[i].append(1)
     return m
+
 
 def create_collate_fn(padding, eos):
     '''
@@ -54,26 +57,24 @@ def create_collate_fn(padding, eos):
         形如: [index1, index2, ...]
 
     '''
+
     def collate_fn(corpus_item):
         #按照inputVar的长度进行排序,是调用pad_packed_sequence方法的要求
-        corpus_item.sort(key=lambda p: len(p[0]), reverse=True) 
+        corpus_item.sort(key=lambda p: len(p[0]), reverse=True)
         inputs, targets, indexes = zip(*corpus_item)
         input_lengths = torch.tensor([len(inputVar) for inputVar in inputs])
         inputs = zeroPadding(inputs, padding)
-        inputs = torch.LongTensor(inputs) #注意这里要LongTensor
-        
+        inputs = torch.LongTensor(inputs)  #注意这里要LongTensor
+
         max_target_length = max([len(targetVar) for targetVar in targets])
         targets = zeroPadding(targets, padding)
         mask = binaryMatrix(targets, padding)
-        mask = torch.ByteTensor(mask)
+        mask = torch.BoolTensor(mask)
         targets = torch.LongTensor(targets)
-        
-        
+
         return inputs, targets, mask, input_lengths, max_target_length, indexes
 
     return collate_fn
-
-
 
 
 class CorpusDataset(dataimport.Dataset):
@@ -86,11 +87,11 @@ class CorpusDataset(dataimport.Dataset):
         self.padding = self.word2ix.get(self._data.get('padding'))
         self.eos = self.word2ix.get(self._data.get('eos'))
         self.sos = self.word2ix.get(self._data.get('sos'))
-        
+
     def __getitem__(self, index):
         inputVar = self.corpus[index][0]
         targetVar = self.corpus[index][1]
-        return inputVar,targetVar, index
+        return inputVar, targetVar, index
 
     def __len__(self):
         return len(self.corpus)
@@ -98,10 +99,11 @@ class CorpusDataset(dataimport.Dataset):
 
 def get_dataloader(opt):
     dataset = CorpusDataset(opt)
-    dataloader = dataimport.DataLoader(dataset,
-                                 batch_size=opt.batch_size,
-                                 shuffle=opt.shuffle, #是否打乱数据
-                                 num_workers=opt.num_workers, #多进程提取数据
-                                 drop_last=True, #丢掉最后一个不足一个batch的数据
-                                 collate_fn=create_collate_fn(dataset.padding, dataset.eos))
+    dataloader = dataimport.DataLoader(
+        dataset,
+        batch_size=opt.batch_size,
+        shuffle=opt.shuffle,  #是否打乱数据
+        num_workers=opt.num_workers,  #多进程提取数据
+        drop_last=True,  #丢掉最后一个不足一个batch的数据
+        collate_fn=create_collate_fn(dataset.padding, dataset.eos))
     return dataloader
