@@ -19,7 +19,7 @@ def chat(**kwargs):
         preprocess()
 
     while (1):
-        input_sentence = input('Doragd > ')
+        input_sentence = input('我 > ')
         if input_sentence == 'q' or input_sentence == 'quit' or input_sentence == 'exit':
             break
         if opt.use_QA_first:
@@ -35,7 +35,7 @@ def chat(**kwargs):
             output_words = train_eval.output_answer(input_sentence, searcher,
                                                     sos, eos, unknown, opt,
                                                     word2ix, ix2word)
-        print('BOT > ', output_words)
+        print('TA > ', output_words)
 
     QA_test.conn.close()
 

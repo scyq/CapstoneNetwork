@@ -13,13 +13,13 @@ class Config:
     max_input_length = 50  #输入的最大句子长度
     max_generate_length = 20  #生成的最大句子长度
     prefix = 'checkpoints/chatbot'  #模型断点路径前缀
-    # model_ckpt = 'checkpoints/chatbot_0509_1437'  #加载模型路径
-    model_ckpt = None  # 如果从零开始训练, 则不从任何checkpoints继续
+    model_ckpt = 'checkpoints/chatbot_0419_1533'  #加载模型路径
+    # model_ckpt = None  # 如果从零开始训练, 则不从任何checkpoints继续
     '''
     训练超参数
     '''
     # batch_size = 2048
-    batch_size = 32
+    batch_size = 1024
     shuffle = True  #dataloader是否打乱数据
     num_workers = 0  #dataloader多进程提取数据
     bidirectional = True  #Encoder-RNN是否双向
