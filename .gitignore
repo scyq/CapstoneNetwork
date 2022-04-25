@@ -110,3 +110,6 @@ PsyQA_full.json
 *.pth
 checkpoints/
 clean_chat_corpus/
+
+# ptm
+pretrained_models/

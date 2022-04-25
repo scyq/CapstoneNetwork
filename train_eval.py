@@ -38,7 +38,6 @@ def maskNLLLoss(inp, target, mask):
 def train_by_batch(sos, opt, data, encoder_optimizer, decoder_optimizer,
                    encoder, decoder):
     #清空梯度
-
     encoder_optimizer.zero_grad()
     decoder_optimizer.zero_grad()
 
@@ -210,6 +209,7 @@ def generate(input_seq, searcher, sos, eos, opt):
     return tokens
 
 
+# 还没写好，目前质量只能人为评估
 def eval(**kwargs):
 
     opt = Config()
