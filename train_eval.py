@@ -145,9 +145,9 @@ def train(**kwargs):
     # 数据
     dataloader = get_dataloader(opt)
     _data = dataloader.dataset._data
-    word2ix = _data['word2ix']
-    sos = word2ix.get(_data.get('sos'))
-    voc_length = len(word2ix)
+    word2index = _data['word2index']
+    sos = word2index.get(_data.get('sos'))
+    voc_length = len(word2index)
 
     #定义模型
     encoder = EncoderRNN(opt, voc_length)
@@ -209,65 +209,16 @@ def generate(input_seq, searcher, sos, eos, opt):
     return tokens
 
 
-# 还没写好，目前质量只能人为评估
-def eval(**kwargs):
-
-    opt = Config()
-    for k, v in kwargs.items():  #设置参数
-        setattr(opt, k, v)
-
-    # 数据
-    dataloader = get_dataloader(opt)
-    _data = dataloader.dataset._data
-    word2ix, ix2word = _data['word2ix'], _data['ix2word']
-    sos = word2ix.get(_data.get('sos'))
-    eos = word2ix.get(_data.get('eos'))
-    unknown = word2ix.get(_data.get('unknown'))
-    voc_length = len(word2ix)
-
-    #定义模型
-    encoder = EncoderRNN(opt, voc_length)
-    decoder = LuongAttnDecoderRNN(opt, voc_length)
-
-    #加载模型
-    if opt.model_ckpt == None:
-        raise ValueError('model_ckpt is None.')
-        return False
-    checkpoint = torch.load(opt.model_ckpt, map_location=lambda s, l: s)
-    encoder.load_state_dict(checkpoint['en'])
-    decoder.load_state_dict(checkpoint['de'])
-
-    with torch.no_grad():
-        #切换模式
-        encoder = encoder.to(opt.device)
-        decoder = decoder.to(opt.device)
-        encoder.eval()
-        decoder.eval()
-        #定义seracher
-        searcher = GreedySearchDecoder(encoder, decoder)
-
-        while (1):
-            input_sentence = input('> ')
-            if input_sentence == 'q' or input_sentence == 'quit': break
-            cop = re.compile("[^\u4e00-\u9fa5^a-z^A-Z^0-9]")  #分词处理正则
-            input_seq = jieba.lcut(cop.sub("", input_sentence))  #分词序列
-            input_seq = input_seq[:opt.max_input_length] + ['</EOS>']
-            input_seq = [word2ix.get(word, unknown) for word in input_seq]
-            tokens = generate(input_seq, searcher, sos, eos, opt)
-            output_words = ''.join([ix2word[token.item()] for token in tokens])
-            print('BOT: ', output_words)
-
-
 def test(opt):
 
     # 数据
     dataloader = get_dataloader(opt)
     _data = dataloader.dataset._data
-    word2ix, ix2word = _data['word2ix'], _data['ix2word']
-    sos = word2ix.get(_data.get('sos'))
-    eos = word2ix.get(_data.get('eos'))
-    unknown = word2ix.get(_data.get('unknown'))
-    voc_length = len(word2ix)
+    word2index, index2word = _data['word2index'], _data['index2word']
+    sos = word2index.get(_data.get('sos'))
+    eos = word2index.get(_data.get('eos'))
+    unknown = word2index.get(_data.get('unknown'))
+    voc_length = len(word2index)
 
     #定义模型
     encoder = EncoderRNN(opt, voc_length)
@@ -289,18 +240,18 @@ def test(opt):
         decoder.eval()
         #定义seracher
         searcher = GreedySearchDecoder(encoder, decoder)
-        return searcher, sos, eos, unknown, word2ix, ix2word
+        return searcher, sos, eos, unknown, word2index, index2word
 
 
-def output_answer(input_sentence, searcher, sos, eos, unknown, opt, word2ix,
-                  ix2word):
+def output_answer(input_sentence, searcher, sos, eos, unknown, opt, word2index,
+                  index2word):
     cop = re.compile("[^\u4e00-\u9fa5^a-z^A-Z^0-9]")  #分词处理正则
     input_seq = jieba.lcut(cop.sub("", input_sentence))  #分词序列
     input_seq = input_seq[:opt.max_input_length] + ['</EOS>']
-    input_seq = [word2ix.get(word, unknown) for word in input_seq]
+    input_seq = [word2index.get(word, unknown) for word in input_seq]
     tokens = generate(input_seq, searcher, sos, eos, opt)
     output_words = ''.join(
-        [ix2word[token.item()] for token in tokens if token.item() != eos])
+        [index2word[token.item()] for token in tokens if token.item() != eos])
     return output_words
 
 

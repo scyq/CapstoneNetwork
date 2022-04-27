@@ -7,7 +7,7 @@ from torch.utils import data as dataimport
 
 def zeroPadding(l, fillvalue):
     '''
-    l是多个长度不同的句子(list)，使用zip_longest padding成定长，长度为最长句子的长度
+    l是多个长度不同的句子(list), 使用zip_longest padding成定长, 长度为最长句子的长度
     在zeroPadding函数中隐式转置
     [batch_size, max_seq_len] ==> [max_seq_len, batch_size]
     '''
@@ -37,8 +37,8 @@ def create_collate_fn(padding, eos):
 
     corpus_item: 
         lsit, 形如[(inputVar1, targetVar1, index1),(inputVar2, targetVar2, index2),...]
-        inputVar1: [word_ix, word_ix,word_ix,...]
-        targetVar1: [word_ix, word_ix,word_ix,...]
+        inputVar1: [word_index, word_index, word_index, ...]
+        targetVar1: [word_index, word_index, word_index, ...]
     inputs: 
         取出所有inputVar组成的list,形如[inputVar1,inputVar2,inputVar3,...], 
         padding后(这里有隐式转置)转为tensor后形状为:[max_seq_len, batch_size]
@@ -82,11 +82,11 @@ class CorpusDataset(dataimport.Dataset):
     def __init__(self, opt):
         self.opt = opt
         self._data = torch.load(opt.corpus_data_path)
-        self.word2ix = self._data['word2ix']
+        self.word2index = self._data['word2index']
         self.corpus = self._data['corpus']
-        self.padding = self.word2ix.get(self._data.get('padding'))
-        self.eos = self.word2ix.get(self._data.get('eos'))
-        self.sos = self.word2ix.get(self._data.get('sos'))
+        self.padding = self.word2index.get(self._data.get('padding'))
+        self.eos = self.word2index.get(self._data.get('eos'))
+        self.sos = self.word2index.get(self._data.get('sos'))
 
     def __getitem__(self, index):
         inputVar = self.corpus[index][0]
