@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 from data_preprocess import preprocess
-import train_eval
+import train_test
 import fire
 from QA_data import QA_test
 from config import Config
@@ -13,7 +13,7 @@ def chat(**kwargs):
     for k, v in kwargs.items():  #设置参数
         setattr(opt, k, v)
 
-    searcher, sos, eos, unknown, word2index, index2word = train_eval.test(opt)
+    searcher, sos, eos, unknown, word2index, index2word = train_test.test(opt)
 
     if os.path.isfile(opt.corpus_data_path) == False:
         preprocess()
@@ -25,14 +25,14 @@ def chat(**kwargs):
         if opt.use_QA_first:
             query_res = QA_test.match(input_sentence)
             if (query_res == tuple()):
-                output_words = train_eval.output_answer(
+                output_words = train_test.output_answer(
                     input_sentence, searcher, sos, eos, unknown, opt,
                     word2index, index2word)
             else:
                 output_words = "您是不是要找以下问题: " + query_res[
                     1] + '，您可以尝试这样: ' + query_res[2]
         else:
-            output_words = train_eval.output_answer(input_sentence, searcher,
+            output_words = train_test.output_answer(input_sentence, searcher,
                                                     sos, eos, unknown, opt,
                                                     word2index, index2word)
         print('TA > ', output_words)
